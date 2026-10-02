@@ -1,0 +1,42 @@
+{
+  "batteries": [
+    {
+      "cap_kwh": 3.50000000000000E+01,
+      "enabled": false,
+      "eta": 9.50000000000000E-01,
+      "name": "Magazyn 1",
+      "power_kw": 1.00000000000000E+01,
+      "soc0": 5.00000000000000E-01,
+      "soc_min": 1.00000000000000E-01
+    }
+  ],
+  "grid_power_kw": 1.20000000000000E+01,
+  "load": {
+    "profile": "home",
+    "yearly_kwh": 6.00000000000000E+03
+  },
+  "location": {
+    "lat": 5.34600000000000E+01,
+    "lon": 1.47800000000000E+01,
+    "timezone": "Europe/Warsaw"
+  },
+  "name": "Projekt OZE",
+  "pv_sources": [
+    {
+      "azimuth_deg": 0.00000000000000E+00,
+      "enabled": true,
+      "kwp": 8.00000000000000E+00,
+      "mounting": "building",
+      "name": "Dach po\u0142udniowy",
+      "system_loss_frac": 1.40000000000000E-01,
+      "technology": "crystSi2025",
+      "tilt_deg": 4.00000000000000E+01
+    }
+  ],
+  "tariff": {
+    "buy_base": 8.00000000000000E-01,
+    "profile": "G11",
+    "sell_base": 3.00000000000000E-01
+  },
+  "version": 1
+}

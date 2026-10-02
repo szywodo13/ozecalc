@@ -1,0 +1,22 @@
+name = "ozecalc"
+description = "OZE energy calculator"
+version = "0.1.0-dev"
+
+project-files = ["oze.gpr"]
+
+authors = ["Marcin"]
+maintainers = ["Marcin <szywodo13@gmail.com>"]
+licenses = "custom-proprietary"
+website = ""
+tags = []
+
+executables = ["ozecalc"]
+
+[gpr-set-externals]
+SOCKET = "openssl"
+
+[[depends-on]]
+aws = "^25.2.0"
+
+[[depends-on]]
+gnatcoll = "^25.0.0"

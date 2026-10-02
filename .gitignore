@@ -1,0 +1,16 @@
+# Alire generated/internal files
+alire/
+config/
+
+# Build output
+bin/
+obj/
+
+# Runtime/project data
+# data/
+# data_test
+
+# Editor backups
+*~
+*.swp
+*.swo

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "name": "Projekt OZE",
+  "location": {
+    "lat": 53.46,
+    "lon": 14.78,
+    "timezone": "Europe/Warsaw"
+  },
+  "grid_power_kw": 12.0,
+  "load": {
+     "yearly_kwh": 6000,
+     "profile": "home"
+   },
+  "pv_sources": [
+    {
+      "enabled": true,
+      "name": "Dach południowy",
+      "kwp": 8.0,
+      "technology": "crystSi2025",
+      "tilt_deg": 40.0,
+      "azimuth_deg": 0.0,
+      "system_loss_frac": 0.14,
+      "mounting": "building"
+    }
+  ],
+  "batteries": [
+    {
+      "enabled": false,
+      "name": "Magazyn 1",
+      "cap_kwh": 35.0,
+      "soc0": 0.5,
+      "soc_min": 0.1,
+      "power_kw": 10.0,
+      "eta": 0.95
+    }
+  ],
+  "tariff": {
+    "profile": "G11",
+    "buy_base": 0.80,
+    "sell_base": 0.30
+  }
+}
