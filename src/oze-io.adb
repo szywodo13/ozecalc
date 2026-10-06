@@ -12,6 +12,25 @@ package body OZE.IO is
    use Ada.Strings.Unbounded;
    use GNATCOLL.JSON;
 
+   package Real_IO is new Ada.Text_IO.Float_IO (Real);
+
+   function Real_Image
+     (Value : Real) return String
+   is
+      Buffer : String (1 .. 40);
+   begin
+      Real_IO.Put
+        (To   => Buffer,
+         Item => Value,
+         Aft  => 12,
+         Exp  => 0);
+
+      return
+        Ada.Strings.Fixed.Trim
+          (Buffer,
+           Ada.Strings.Both);
+   end Real_Image;
+
 
    function Project_File
      (Project_Directory : String;
@@ -349,10 +368,10 @@ package body OZE.IO is
      (Project_Directory : String;
       Project           : OZE.Project.Project_Data)
    is
-      Root          : JSON_Value := Create_Object;
-      Location_JSON : JSON_Value := Create_Object;
-      Load_JSON     : JSON_Value := Create_Object;
-      Tariff_JSON   : JSON_Value := Create_Object;
+      Root          : constant JSON_Value := Create_Object;
+      Location_JSON : constant JSON_Value := Create_Object;
+      Load_JSON     : constant JSON_Value := Create_Object;
+      Tariff_JSON   : constant JSON_Value := Create_Object;
 
       PV_JSON        : JSON_Array := Empty_Array;
       Batteries_JSON : JSON_Array := Empty_Array;
@@ -416,7 +435,7 @@ package body OZE.IO is
 
       for Source of Project.PV_Sources loop
          declare
-            Item : JSON_Value := Create_Object;
+            Item : constant JSON_Value := Create_Object;
          begin
             Set_Field
               (Item,
@@ -474,7 +493,7 @@ package body OZE.IO is
 
       for Battery of Project.Batteries loop
          declare
-            Item : JSON_Value := Create_Object;
+            Item : constant JSON_Value := Create_Object;
          begin
             Set_Field
               (Item,
@@ -670,16 +689,111 @@ package body OZE.IO is
 
    procedure Load_Tariff_Profiles
      (Project_Directory : String;
-      Config            : OZE.Project.Tariff_Config;
       Buy_Price         : out OZE.Costs.Price_Profile;
       Sell_Price        : out OZE.Costs.Price_Profile)
    is
-      pragma Unreferenced
-        (Project_Directory, Config,
-         Buy_Price, Sell_Price);
+      File : Ada.Text_IO.File_Type;
+
    begin
-      raise Program_Error
-        with "Load_Tariff_Profiles not implemented";
+      Ada.Text_IO.Open
+        (File,
+         Ada.Text_IO.In_File,
+         Project_File
+           (Project_Directory,
+            "tariffs.csv"));
+
+      declare
+         Header : constant String :=
+           Ada.Text_IO.Get_Line (File);
+      begin
+         if Header /= "t;buy;sell" then
+            Ada.Text_IO.Close (File);
+
+            raise Constraint_Error
+              with "Invalid tariffs.csv header";
+         end if;
+      end;
+
+
+      for H in Hour_Of_Year loop
+
+         if Ada.Text_IO.End_Of_File (File) then
+            Ada.Text_IO.Close (File);
+
+            raise Constraint_Error
+              with "tariffs.csv contains fewer than 8760 rows";
+         end if;
+
+         declare
+            Line : constant String :=
+              Ada.Text_IO.Get_Line (File);
+
+            Separator_1 : constant Natural :=
+              Ada.Strings.Fixed.Index
+                (Line,
+                 ";");
+
+            Separator_2 : constant Natural :=
+              (if Separator_1 = 0
+               then 0
+               else
+                  Ada.Strings.Fixed.Index
+                 (Line,
+                  ";",
+                  From => Separator_1 + 1));
+         begin
+            if Separator_1 = 0
+              or else Separator_2 = 0
+            then
+               Ada.Text_IO.Close (File);
+
+               raise Constraint_Error
+                 with "Invalid row in tariffs.csv";
+            end if;
+
+            declare
+               Time_Value : constant Natural :=
+                 Natural'Value
+                   (Line
+                      (Line'First ..
+                             Separator_1 - 1));
+
+               Buy_Value : constant Real :=
+                 Real'Value
+                   (Line
+                      (Separator_1 + 1 ..
+                             Separator_2 - 1));
+
+               Sell_Value : constant Real :=
+                 Real'Value
+                   (Line
+                      (Separator_2 + 1 ..
+                             Line'Last));
+            begin
+               if Time_Value /= H then
+                  Ada.Text_IO.Close (File);
+
+                  raise Constraint_Error
+                    with "Invalid hour index in tariffs.csv";
+               end if;
+
+               Buy_Price (H) := Buy_Value;
+               Sell_Price (H) := Sell_Value;
+            end;
+         end;
+
+      end loop;
+
+
+      if not Ada.Text_IO.End_Of_File (File) then
+         Ada.Text_IO.Close (File);
+
+         raise Constraint_Error
+           with "tariffs.csv contains more than 8760 rows";
+      end if;
+
+      Ada.Text_IO.Close (File);
+
    end Load_Tariff_Profiles;
 
 
@@ -699,11 +813,32 @@ package body OZE.IO is
      (Project_Directory : String;
       Production        : Hourly_Profile)
    is
-      pragma Unreferenced
-        (Project_Directory, Production);
+      File : Ada.Text_IO.File_Type;
    begin
-      raise Program_Error
-        with "Save_Production not implemented";
+      Ada.Text_IO.Create
+        (File,
+         Ada.Text_IO.Out_File,
+         Project_File
+           (Project_Directory,
+            "production.csv"));
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "t;production");
+
+      for H in Hour_Of_Year loop
+         Ada.Text_IO.Put_Line
+           (File,
+            Ada.Strings.Fixed.Trim
+              (Natural'Image (H),
+               Ada.Strings.Both)
+            & ";"
+            & Real_Image
+              (Real (Production (H))));
+      end loop;
+
+      Ada.Text_IO.Close (File);
+
    end Save_Production;
 
 
@@ -715,16 +850,54 @@ package body OZE.IO is
       Buy_Price         : OZE.Costs.Price_Profile;
       Sell_Price        : OZE.Costs.Price_Profile)
    is
-      pragma Unreferenced
-        (Project_Directory,
-         Production,
-         Load,
-         EMS,
-         Buy_Price,
-         Sell_Price);
+      File : Ada.Text_IO.File_Type;
    begin
-      raise Program_Error
-        with "Write_Timeseries not implemented";
+      Ada.Text_IO.Create
+        (File,
+         Ada.Text_IO.Out_File,
+         Project_File
+           (Project_Directory,
+            "timeseries.csv"));
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "t;production;load;auto;charge;discharge;"
+         & "soc_total;grid_in;grid_out;unserved_load;"
+         & "buy;sell");
+
+      for H in Hour_Of_Year loop
+         Ada.Text_IO.Put_Line
+           (File,
+            Ada.Strings.Fixed.Trim
+              (Natural'Image (H),
+               Ada.Strings.Both)
+            & ";"
+            & Real_Image (Real (Production (H)))
+            & ";"
+            & Real_Image (Real (Load (H)))
+            & ";"
+            & Real_Image (Real (EMS.Auto (H)))
+            & ";"
+            & Real_Image (Real (EMS.Charge (H)))
+            & ";"
+            & Real_Image (Real (EMS.Discharge (H)))
+            & ";"
+            & Real_Image (Real (EMS.SOC_Total (H)))
+            & ";"
+            & Real_Image (Real (EMS.Grid_In (H)))
+            & ";"
+            & Real_Image (Real (EMS.Grid_Out (H)))
+            & ";"
+            & Real_Image (Real (EMS.Unserved_Load (H)))
+            & ";"
+            & Real_Image (Real (EMS.Grid_In (H)) * Buy_Price (H))
+            & ";"
+            & Real_Image (Real (EMS.Grid_Out (H)) * Sell_Price (H)));
+      end loop;
+
+      Ada.Text_IO.Close (File);
+
    end Write_Timeseries;
+
 
 end OZE.IO;

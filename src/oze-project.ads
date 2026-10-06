@@ -62,4 +62,12 @@ package OZE.Project is
       Tariff      : Tariff_Config;
    end record;
 
+   function Enabled_PV_Sources
+     (Project : Project_Data)
+   return OZE.Production.PV_Config_Array;
+
+   function Enabled_Batteries
+     (Project : Project_Data)
+   return OZE.EMS.Battery_Config_Array;
+
 end OZE.Project;

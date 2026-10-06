@@ -25,12 +25,12 @@
   ],
   "batteries": [
     {
-      "enabled": false,
+      "enabled": true,
       "name": "Magazyn 1",
-      "cap_kwh": 35.0,
+      "cap_kwh": 10.0,
       "soc0": 0.5,
       "soc_min": 0.1,
-      "power_kw": 10.0,
+      "power_kw": 5.0,
       "eta": 0.95
     }
   ],

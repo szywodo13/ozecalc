@@ -15,12 +15,11 @@ package OZE.IO is
 
    function Load_Load_Profile
      (Project_Directory : String)
-   return Hourly_Profile;
+      return Hourly_Profile;
 
 
    procedure Load_Tariff_Profiles
      (Project_Directory : String;
-      Config            : OZE.Project.Tariff_Config;
       Buy_Price         : out OZE.Costs.Price_Profile;
       Sell_Price        : out OZE.Costs.Price_Profile);
 

@@ -11,8 +11,6 @@ with GNATCOLL.JSON;
 
 package body OZE.Production is
 
-   use type OZE.Energy;
-
    use GNATCOLL.JSON;
 
    package Real_IO is new Ada.Text_IO.Float_IO (Real);
