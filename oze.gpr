@@ -1,5 +1,6 @@
 with "aws";
 with "gnatcoll";
+with "gtkada";
 
 project OZE is
 

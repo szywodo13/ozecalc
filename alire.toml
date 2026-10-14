@@ -20,3 +20,9 @@ aws = "^25.2.0"
 
 [[depends-on]]
 gnatcoll = "^25.0.0"
+
+[[depends-on]]
+gtkada = "^25.0.1"
+
+[[depends-on]]
+gnat_native = "=14.2.1"

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+unset GDK_PIXBUF_MODULEDIR
+unset GDK_PIXBUF_MODULE_FILE
+unset GI_TYPELIB_PATH
+unset GTK_DATA_PREFIX
+unset GTK_EXE_PREFIX
+unset XDG_CONFIG_HOME
+unset XDG_DATA_DIRS
+
+export DBUS_SESSION_BUS_ADDRESS="$GPS_STARTUP_DBUS_SESSION_BUS_ADDRESS"
+
+exec /home/marcin/ozecalc/bin/main "$@"
