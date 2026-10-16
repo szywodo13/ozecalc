@@ -41,7 +41,8 @@ package body GUI.Project is
       Row          : Glib.Gint;
       Caption      : String;
       Default_Text : String;
-      Unit_Text    : String := "")
+      Unit_Text    : String := "";
+      Tooltip_Text : String := "")
    is
       Label : Gtk_Label;
       Field : Gtk_Entry;
@@ -52,6 +53,12 @@ package body GUI.Project is
       Label.Set_Halign (Gtk.Widget.Align_Start);
 
       Gtk_New (Field);
+
+      if Tooltip_Text /= "" then
+         Field.Set_Tooltip_Text (Tooltip_Text);
+         Label.Set_Tooltip_Text (Tooltip_Text);
+      end if;
+
       Field.Set_Text (Default_Text);
       Field.Set_Width_Chars (12);
 
@@ -95,6 +102,8 @@ package body GUI.Project is
       Scrolled : Gtk.Scrolled_Window.Gtk_Scrolled_Window;
       Content  : Gtk.Box.Gtk_Box;
 
+      Top_Box : Gtk.Box.Gtk_Box;
+
       Project_Frame    : Gtk_Frame;
       Production_Frame : Gtk_Frame;
 
@@ -128,6 +137,11 @@ package body GUI.Project is
       Content.Set_Border_Width (12);
 
       Scrolled.Add (Content);
+
+      Gtk_New
+        (Top_Box,
+         Gtk.Enums.Orientation_Horizontal,
+         12);
 
       Page.Pack_Start
         (Scrolled,
@@ -182,11 +196,42 @@ package body GUI.Project is
 
       Project_Frame.Add (Project_Grid);
 
-      Content.Pack_Start
+      -- Content.Pack_Start
+      -- (Project_Frame,
+      --False,
+      --False,
+      --0);
+
+      Top_Box.Pack_Start
         (Project_Frame,
-         False,
-         False,
-         0);
+         Expand  => True,
+         Fill    => True,
+         Padding => 0);
+
+      ---------------------------------------------------------
+      -- TARIFF
+      ---------------------------------------------------------
+
+      GUI.Project.Tariffs.Create (Tariffs_Container);
+
+      --  Content.Pack_Start
+      --    (Tariffs_Container,
+      --     False,
+      --     True,
+      --     0);
+
+      Top_Box.Pack_Start
+        (Tariffs_Container,
+         Expand  => True,
+         Fill    => True,
+         Padding => 0);
+
+      Content.Pack_Start
+        (Top_Box,
+         Expand  => False,
+         Fill    => True,
+         Padding => 0);
+
 
       ---------------------------------------------------------
       -- PV
@@ -208,30 +253,6 @@ package body GUI.Project is
 
       Content.Pack_Start
         (Battery_Container,
-         False,
-         True,
-         0);
-
-      ---------------------------------------------------------
-      -- LOAD
-      ---------------------------------------------------------
-
-      GUI.Project.Load.Create (Load_Container);
-
-      Content.Pack_Start
-        (Load_Container,
-         False,
-         True,
-         0);
-
-      ---------------------------------------------------------
-      -- TARIFF
-      ---------------------------------------------------------
-
-      GUI.Project.Tariffs.Create (Tariffs_Container);
-
-      Content.Pack_Start
-        (Tariffs_Container,
          False,
          True,
          0);
@@ -282,6 +303,18 @@ package body GUI.Project is
         (Production_Frame,
          False,
          False,
+         0);
+
+      ---------------------------------------------------------
+      -- LOAD
+      ---------------------------------------------------------
+
+      GUI.Project.Load.Create (Load_Container);
+
+      Content.Pack_Start
+        (Load_Container,
+         False,
+         True,
          0);
 
    end Create;

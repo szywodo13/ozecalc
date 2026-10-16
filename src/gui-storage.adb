@@ -1,4 +1,3 @@
-with Gtk.Box;
 with Gtk.Frame;
 with Gtk.Label;
 with Gtk.Enums;

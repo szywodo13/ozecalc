@@ -6,7 +6,6 @@ with Gtk.Box;
 with Gtk.Enums;
 with Gtk.Main;
 
-with GUI;
 with GUI.Project;
 with GUI.EMS;
 with GUI.Storage;

@@ -4,6 +4,7 @@ with Gtk.Button;
 with Gtk.Check_Button;
 with Gtk.Widget;
 with Gtk.Enums;
+with Gtk.Scrolled_Window;
 
 package body GUI.Project.Batteries is
 
@@ -175,6 +176,8 @@ package body GUI.Project.Batteries is
    procedure Create
      (Container : out Gtk.Box.Gtk_Box) is
 
+      Battery_Scrolled : Gtk.Scrolled_Window.Gtk_Scrolled_Window;
+
       Battery_Frame    : Gtk_Frame;
       Battery_Box : Gtk_Box;
       Add_Battery_Button : Gtk_Button;
@@ -197,13 +200,21 @@ package body GUI.Project.Batteries is
 
       Gtk_New
         (Battery_List_Box,
-         Orientation_Vertical,
+         Orientation_Horizontal,
          6);
 
+      Gtk.Scrolled_Window.Gtk_New (Battery_Scrolled);
+
+      Battery_Scrolled.Set_Policy
+        (Gtk.Enums.Policy_Automatic,
+         Gtk.Enums.Policy_Never);
+
+      Battery_Scrolled.Add (Battery_List_Box);
+
       Container.Pack_Start
-        (Battery_List_Box,
+        (Battery_Scrolled,
          False,
-         False,
+         True,
          0);
 
       Gtk_New

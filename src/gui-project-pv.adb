@@ -6,6 +6,7 @@ with Gtk.Check_Button;
 with Gtk.Combo_Box_Text;
 with Gtk.Widget;
 with Gtk.Enums;
+with Gtk.Scrolled_Window;
 
 package body GUI.Project.PV is
 
@@ -113,7 +114,7 @@ package body GUI.Project.PV is
       Technology.Append_Text ("CdTe");
       Technology.Append_Text ("Unknown");
 
-      Technology.Set_Active (1);
+      Technology.Set_Active (0);
 
       Grid.Attach
         (Label,
@@ -139,7 +140,9 @@ package body GUI.Project.PV is
          Row          => 4,
          Caption      => "Nachylenie:",
          Default_Text => "35.0",
-         Unit_Text    => "°");
+         Unit_Text    => "°",
+         Tooltip_Text =>
+           "Nachylenie od poziomu: 0° = poziomo, 90° = pionowo");
 
       ---------------------------------------------------------
       -- Azimuth
@@ -150,8 +153,9 @@ package body GUI.Project.PV is
          Row          => 5,
          Caption      => "Azymut:",
          Default_Text => "0.0",
-         Unit_Text    => "°");
-
+         Unit_Text    => "°",
+         Tooltip_Text =>
+           "PVGIS: 0° = południe, +90° = zachód, -90° = wschód");
 
       ---------------------------------------------------------
       -- Loss
@@ -234,6 +238,8 @@ package body GUI.Project.PV is
       PV_Frame      : Gtk_Frame;
       Add_PV_Button : Gtk_Button;
 
+      PV_Scrolled : Gtk.Scrolled_Window.Gtk_Scrolled_Window;
+
    begin
 
       Gtk_New
@@ -247,13 +253,21 @@ package body GUI.Project.PV is
 
       Gtk_New
         (PV_List_Box,
-         Orientation_Vertical,
+         Orientation_Horizontal,
          6);
 
+      Gtk.Scrolled_Window.Gtk_New (PV_Scrolled);
+
+      PV_Scrolled.Set_Policy
+        (Gtk.Enums.Policy_Automatic,
+         Gtk.Enums.Policy_Never);
+
+      PV_Scrolled.Add (PV_List_Box);
+
       Container.Pack_Start
-        (PV_List_Box,
+        (PV_Scrolled,
          False,
-         False,
+         True,
          0);
 
       Gtk_New

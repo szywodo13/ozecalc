@@ -31,6 +31,7 @@ private
       Row          : Glib.Gint;
       Caption      : String;
       Default_Text : String;
-      Unit_Text    : String := "");
+      Unit_Text    : String := "";
+      Tooltip_Text : String := "");
 
 end GUI.Project;
