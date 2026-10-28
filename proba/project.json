@@ -1,0 +1,26 @@
+{
+  "batteries": [
+  ],
+  "description": "...",
+  "grid_power_kw": 2.10000000000000E+01,
+  "location": {
+    "lat": 5.50000000000000E+01,
+    "lon": 1.50000000000000E+01,
+    "timezone": "Europe/Warsaw"
+  },
+  "name": "Nowy projekt",
+  "pv_sources": [
+    {
+      "azimuth_deg": 0.00000000000000E+00,
+      "enabled": true,
+      "kwp": 1.00000000000000E+01,
+      "mounting": "building",
+      "name": "PV  1",
+      "system_loss_frac": 1.40000000000000E-01,
+      "technology": "crystSi",
+      "tilt_deg": 3.50000000000000E+01
+    }
+  ],
+  "tariff_profile": "G11",
+  "version": 1
+}

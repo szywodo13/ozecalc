@@ -23,6 +23,15 @@ package OZE.IO is
       Buy_Price         : out OZE.Costs.Price_Profile;
       Sell_Price        : out OZE.Costs.Price_Profile);
 
+   procedure Import_Tariff_File
+     (Source_File       : String;
+      Project_Directory : String);
+
+   procedure Generate_Flat_Tariff
+     (Project_Directory : String;
+      Buy_Price         : Real;
+      Sell_Price        : Real);
+
 
    function Load_Production
      (Project_Directory : String)

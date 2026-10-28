@@ -1,5 +1,6 @@
 with Ada.Text_IO;
 with Ada.Directories;
+with Ada.Strings;
 with Ada.Strings.Unbounded;
 with Ada.Strings.Fixed;
 
@@ -15,14 +16,15 @@ package body OZE.IO is
    package Real_IO is new Ada.Text_IO.Float_IO (Real);
 
    function Real_Image
-     (Value : Real) return String
+     (Value    : Real;
+      Decimals : Natural) return String
    is
-      Buffer : String (1 .. 40);
+      Buffer : String (1 .. 64);
    begin
       Real_IO.Put
         (To   => Buffer,
          Item => Value,
-         Aft  => 12,
+         Aft  => Decimals,
          Exp  => 0);
 
       return
@@ -30,6 +32,67 @@ package body OZE.IO is
           (Buffer,
            Ada.Strings.Both);
    end Real_Image;
+
+   function JSON_String
+     (Value : String) return String
+   is
+      Result : Unbounded_String;
+      Hex    : constant String := "0123456789ABCDEF";
+   begin
+      Append (Result, '"');
+
+      for C of Value loop
+         case C is
+
+         when '"' =>
+            Append (Result, '\');
+            Append (Result, '"');
+
+         when '\' =>
+            Append (Result, '\');
+            Append (Result, '\');
+
+         when ASCII.LF =>
+            Append (Result, '\');
+            Append (Result, 'n');
+
+         when ASCII.CR =>
+            Append (Result, '\');
+            Append (Result, 'r');
+
+         when ASCII.HT =>
+            Append (Result, '\');
+            Append (Result, 't');
+
+         when others =>
+            if Character'Pos (C) < 32 then
+               declare
+                  N : constant Natural :=
+                    Character'Pos (C);
+               begin
+                  Append (Result, "\u00");
+                  Append (Result, Hex (N / 16 + 1));
+                  Append (Result, Hex (N mod 16 + 1));
+               end;
+            else
+               Append (Result, C);
+            end if;
+
+         end case;
+      end loop;
+
+      Append (Result, '"');
+
+      return To_String (Result);
+   end JSON_String;
+
+
+   function JSON_String
+     (Value : Unbounded_String) return String
+   is
+   begin
+      return JSON_String (To_String (Value));
+   end JSON_String;
 
 
    function Project_File
@@ -139,7 +202,7 @@ package body OZE.IO is
 
    function Technology_Image
      (Value : OZE.Production.PV_Technology)
-   return String
+      return String
    is
    begin
       case Value is
@@ -163,7 +226,7 @@ package body OZE.IO is
 
    function Mounting_Image
      (Value : OZE.Production.Mounting_Type)
-   return String
+      return String
    is
    begin
       case Value is
@@ -230,38 +293,38 @@ package body OZE.IO is
             OZE.Project.PV_Vectors.Append
               (PV_Sources,
                OZE.Project.PV_Source'
-               (Name =>
-                    To_Unbounded_String
-                  (String_Value (Item, "name")),
+                 (Name =>
+                      To_Unbounded_String
+                    (String_Value (Item, "name")),
 
-                Enabled =>
-                  Boolean'(Get (Item, "enabled")),
+                  Enabled =>
+                    Boolean'(Get (Item, "enabled")),
 
-                Config =>
-                  (Peak_Power =>
-                     Energy
+                  Config =>
+                    (Peak_Power =>
+                         Energy
                        (Number (Item, "kwp")),
 
-                   Technology =>
-                     Technology
-                       (String_Value
-                            (Item, "technology")),
+                     Technology =>
+                       Technology
+                         (String_Value
+                              (Item, "technology")),
 
-                   Tilt =>
-                     Number (Item, "tilt_deg"),
+                     Tilt =>
+                       Number (Item, "tilt_deg"),
 
-                   Azimuth =>
-                     Number
-                       (Item, "azimuth_deg"),
+                     Azimuth =>
+                       Number
+                         (Item, "azimuth_deg"),
 
-                   System_Loss =>
-                     Number
-                       (Item, "system_loss_frac"),
+                     System_Loss =>
+                       Number
+                         (Item, "system_loss_frac"),
 
-                   Mounting =>
-                     Mounting
-                       (String_Value
-                            (Item, "mounting")))));
+                     Mounting =>
+                       Mounting
+                         (String_Value
+                              (Item, "mounting")))));
          end;
       end loop;
 
@@ -274,33 +337,33 @@ package body OZE.IO is
             OZE.Project.Battery_Vectors.Append
               (Batteries,
                OZE.Project.Battery'
-               (Name =>
-                    To_Unbounded_String
-                  (String_Value (Item, "name")),
+                 (Name =>
+                      To_Unbounded_String
+                    (String_Value (Item, "name")),
 
-                Enabled =>
-                  Boolean'(Get (Item, "enabled")),
+                  Enabled =>
+                    Boolean'(Get (Item, "enabled")),
 
-                Config =>
-                  (Capacity =>
-                     Energy
+                  Config =>
+                    (Capacity =>
+                         Energy
                        (Number (Item, "cap_kwh")),
 
-                   Initial_SOC =>
-                     OZE.EMS.State_Of_Charge
-                       (Number (Item, "soc0")),
+                     Initial_SOC =>
+                       OZE.EMS.State_Of_Charge
+                         (Number (Item, "soc0")),
 
-                   Minimum_SOC =>
-                     OZE.EMS.State_Of_Charge
-                       (Number (Item, "soc_min")),
+                     Minimum_SOC =>
+                       OZE.EMS.State_Of_Charge
+                         (Number (Item, "soc_min")),
 
-                   P_Max =>
-                     Energy
-                       (Number (Item, "power_kw")),
+                     P_Max =>
+                       Energy
+                         (Number (Item, "power_kw")),
 
-                   Efficiency =>
-                     OZE.Efficiency
-                       (Number (Item, "eta")))));
+                     Efficiency =>
+                       OZE.Efficiency
+                         (Number (Item, "eta")))));
          end;
       end loop;
 
@@ -313,6 +376,10 @@ package body OZE.IO is
          Name =>
            To_Unbounded_String
              (String_Value (Root, "name")),
+
+         Description =>
+           To_Unbounded_String
+             (String_Value (Root, "description")),
 
          Location =>
            (Site =>
@@ -389,6 +456,10 @@ package body OZE.IO is
          "name",
          Project.Name);
 
+      Set_Field
+        (Root,
+         "description",
+         Project.Description);
 
       Set_Real_Field
         (Location_JSON,
@@ -583,7 +654,7 @@ package body OZE.IO is
 
    function Load_Load_Profile
      (Project_Directory : String)
-   return Hourly_Profile
+      return Hourly_Profile
    is
       File : Ada.Text_IO.File_Type;
 
@@ -797,15 +868,236 @@ package body OZE.IO is
    end Load_Tariff_Profiles;
 
 
+   procedure Import_Tariff_File
+     (Source_File       : String;
+      Project_Directory : String)
+   is
+      Check_Directory : constant String :=
+        Project_Directory & "/.tariff_check";
+
+      Check_File : constant String :=
+        Check_Directory & "/tariffs.csv";
+
+      Target_File : constant String :=
+        Project_Directory & "/tariffs.csv";
+
+      Buy_Profile  : OZE.Costs.Price_Profile;
+      Sell_Profile : OZE.Costs.Price_Profile;
+
+   begin
+
+      if Ada.Directories.Exists (Check_Directory) then
+         Ada.Directories.Delete_Tree (Check_Directory);
+      end if;
+
+      Ada.Directories.Create_Directory (Check_Directory);
+
+      Ada.Directories.Copy_File
+        (Source_Name => Source_File,
+         Target_Name => Check_File,
+         Form        => "mode=overwrite");
+
+      --  Tu następuje właściwa walidacja pliku.
+      OZE.IO.Load_Tariff_Profiles
+        (Project_Directory => Check_Directory,
+         Buy_Price         => Buy_Profile,
+         Sell_Price        => Sell_Profile);
+
+      --  Dopiero poprawny plik trafia do projektu.
+      if Source_File /= Target_File then
+         Ada.Directories.Copy_File
+           (Source_Name => Source_File,
+            Target_Name => Target_File,
+            Form        => "mode=overwrite");
+      end if;
+
+      Ada.Directories.Delete_Tree (Check_Directory);
+
+   exception
+      when others =>
+
+         if Ada.Directories.Exists (Check_Directory) then
+            Ada.Directories.Delete_Tree (Check_Directory);
+         end if;
+
+         raise;
+
+   end Import_Tariff_File;
+
+
+   procedure Generate_Flat_Tariff
+     (Project_Directory : String;
+      Buy_Price         : Real;
+      Sell_Price        : Real)
+   is
+      use Ada.Strings;
+      use Ada.Strings.Fixed;
+
+      File : Ada.Text_IO.File_Type;
+
+      File_Name : constant String :=
+        Project_Directory & "/tariffs.csv";
+
+   begin
+
+      Ada.Text_IO.Create
+        (File => File,
+         Mode => Ada.Text_IO.Out_File,
+         Name => File_Name);
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "t;buy;sell");
+
+      for T in Hour_Of_Year loop
+         Ada.Text_IO.Put_Line
+           (File,
+            Trim (Hour_Of_Year'Image (T), Both)
+            & ";"
+            & Real_Image (Buy_Price, 4)
+            & ";"
+            & Real_Image (Sell_Price, 4));
+      end loop;
+
+      Ada.Text_IO.Close (File);
+
+   exception
+      when others =>
+         if Ada.Text_IO.Is_Open (File) then
+            Ada.Text_IO.Close (File);
+         end if;
+         raise;
+
+   end Generate_Flat_Tariff;
+
+
    function Load_Production
      (Project_Directory : String)
       return Hourly_Profile
    is
-      pragma Unreferenced (Project_Directory);
+      File : Ada.Text_IO.File_Type;
+
+      Result : Hourly_Profile :=
+        [others => 0.0];
+
    begin
-      return
-        (raise Program_Error
-           with "Load_Production not implemented");
+      Ada.Text_IO.Open
+        (File,
+         Ada.Text_IO.In_File,
+         Project_File
+           (Project_Directory,
+            "production.csv"));
+
+      ---------------------------------------------------------
+      -- Header
+      ---------------------------------------------------------
+
+      declare
+         Header : constant String :=
+           Ada.Text_IO.Get_Line (File);
+      begin
+         if Header /= "t;production" then
+            Ada.Text_IO.Close (File);
+
+            raise Constraint_Error
+              with "Invalid production.csv header";
+         end if;
+      end;
+
+      ---------------------------------------------------------
+      -- Data
+      ---------------------------------------------------------
+
+      for H in Hour_Of_Year loop
+
+         if Ada.Text_IO.End_Of_File (File) then
+            Ada.Text_IO.Close (File);
+
+            raise Constraint_Error
+              with "production.csv contains fewer than 8760 rows";
+         end if;
+
+         declare
+            Line : constant String :=
+              Ada.Text_IO.Get_Line (File);
+
+            Separator : constant Natural :=
+              Ada.Strings.Fixed.Index
+                (Line, ";");
+
+            Second_Separator : constant Natural :=
+              (if Separator = 0
+               then 0
+               else
+                  Ada.Strings.Fixed.Index
+                 (Line,
+                  ";",
+                  From => Separator + 1));
+
+         begin
+            if Separator = 0
+              or else Second_Separator /= 0
+              or else Separator = Line'First
+              or else Separator = Line'Last
+            then
+               Ada.Text_IO.Close (File);
+
+               raise Constraint_Error
+                 with "Invalid row in production.csv";
+            end if;
+
+            declare
+               Time_Value : constant Natural :=
+                 Natural'Value
+                   (Line
+                      (Line'First ..
+                             Separator - 1));
+
+               Production_Value : constant Real :=
+                 Real'Value
+                   (Line
+                      (Separator + 1 ..
+                             Line'Last));
+
+            begin
+               if Time_Value /= H then
+                  Ada.Text_IO.Close (File);
+
+                  raise Constraint_Error
+                    with
+                      "Invalid hour index in production.csv";
+               end if;
+
+               if Production_Value < 0.0 then
+                  Ada.Text_IO.Close (File);
+
+                  raise Constraint_Error
+                    with
+                      "Negative production value in production.csv";
+               end if;
+
+               Result (H) :=
+                 Energy (Production_Value);
+            end;
+         end;
+
+      end loop;
+
+      ---------------------------------------------------------
+      -- No extra rows
+      ---------------------------------------------------------
+
+      if not Ada.Text_IO.End_Of_File (File) then
+         Ada.Text_IO.Close (File);
+
+         raise Constraint_Error
+           with "production.csv contains more than 8760 rows";
+      end if;
+
+      Ada.Text_IO.Close (File);
+
+      return Result;
+
    end Load_Production;
 
 
@@ -834,7 +1126,7 @@ package body OZE.IO is
                Ada.Strings.Both)
             & ";"
             & Real_Image
-              (Real (Production (H))));
+              (Real (Production (H)),6));
       end loop;
 
       Ada.Text_IO.Close (File);
@@ -872,27 +1164,28 @@ package body OZE.IO is
               (Natural'Image (H),
                Ada.Strings.Both)
             & ";"
-            & Real_Image (Real (Production (H)))
+            & Real_Image (Real (Production (H)), 6)
             & ";"
-            & Real_Image (Real (Load (H)))
+            & Real_Image (Real (Load (H)), 6)
             & ";"
-            & Real_Image (Real (EMS.Auto (H)))
+            & Real_Image (Real (EMS.Auto (H)), 6)
             & ";"
-            & Real_Image (Real (EMS.Charge (H)))
+            & Real_Image (Real (EMS.Charge (H)), 6)
             & ";"
-            & Real_Image (Real (EMS.Discharge (H)))
+            & Real_Image (Real (EMS.Discharge (H)), 6)
             & ";"
-            & Real_Image (Real (EMS.SOC_Total (H)))
+            & Real_Image (Real (EMS.SOC_Total (H)), 6)
             & ";"
-            & Real_Image (Real (EMS.Grid_In (H)))
+            & Real_Image (Real (EMS.Grid_In (H)), 6)
             & ";"
-            & Real_Image (Real (EMS.Grid_Out (H)))
+            & Real_Image (Real (EMS.Grid_Out (H)), 6)
             & ";"
-            & Real_Image (Real (EMS.Unserved_Load (H)))
+            & Real_Image (Real (EMS.Unserved_Load (H)), 6)
             & ";"
-            & Real_Image (Real (EMS.Grid_In (H)) * Buy_Price (H))
+            & Real_Image (Real (EMS.Grid_In (H)) * Buy_Price (H), 6)
             & ";"
-            & Real_Image (Real (EMS.Grid_Out (H)) * Sell_Price (H)));
+            & Real_Image (Real (EMS.Grid_Out (H)) * Sell_Price (H), 6)
+           );
       end loop;
 
       Ada.Text_IO.Close (File);

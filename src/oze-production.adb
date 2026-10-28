@@ -152,33 +152,54 @@ package body OZE.Production is
    end Integer_Number;
 
 
-   function HTTP_Get_JSON
-     (URL : String)
-      return JSON_Value
-   is
-      Response : constant AWS.Response.Data :=
-        AWS.Client.Get (URL => URL);
-
-      Response_Text : constant String :=
-        AWS.Response.Message_Body (Response);
+   function HTTP_Get_JSON (URL : String) return JSON_Value is
    begin
-      if AWS.Response.Status_Code (Response)
-      not in AWS.Messages.Success
-      then
-         raise Program_Error
-           with
-             "PVGIS HTTP error "
-             & AWS.Messages.Image
-           (AWS.Response.Status_Code (Response))
-           & ASCII.LF
-           & "URL: "
-           & URL
-           & ASCII.LF
-           & "Response: "
-           & Response_Text;
-      end if;
+      for Attempt in 1 .. 3 loop
 
-      return GNATCOLL.JSON.Read (Response_Text);
+         declare
+            Response : constant AWS.Response.Data :=
+              AWS.Client.Get (URL => URL);
+
+            Response_Text : constant String :=
+              AWS.Response.Message_Body (Response);
+         begin
+
+            if AWS.Response.Status_Code (Response)
+            in AWS.Messages.Success
+            then
+               return GNATCOLL.JSON.Read (Response_Text);
+            end if;
+
+            --  Przejściowy błąd transportowy AWS
+            if Ada.Strings.Fixed.Index
+              (Response_Text, "AWS.NET.SOCKET_ERROR") /= 0
+              and then Attempt < 3
+            then
+               --  Pierwsze ponowienie od razu.
+               --  Przed trzecią próbą krótka pauza.
+               if Attempt = 2 then
+                  delay 0.1;
+               end if;
+
+            else
+               --  Zwykły błąd HTTP albo wyczerpane próby.
+               raise Program_Error
+                 with
+                   "PVGIS response: " & Response_Text
+                   & " | HTTP: "
+                 & AWS.Messages.Image
+                 (AWS.Response.Status_Code (Response))
+                 & " | URL: " & URL;
+            end if;
+
+         end;
+
+      end loop;
+
+      --  Formalnie nie powinniśmy tu dojść.
+      raise Program_Error
+        with "PVGIS request failed after retries: " & URL;
+
    end HTTP_Get_JSON;
 
 

@@ -54,6 +54,7 @@ package OZE.Project is
    type Project_Data is record
       Version     : Positive;
       Name        : Unbounded_String;
+      Description : Unbounded_String;
       Location    : Location_Config;
       Grid_Limit  : Energy;
       Load        : Load_Config;

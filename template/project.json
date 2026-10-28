@@ -1,16 +1,14 @@
 {
   "version": 1,
   "name": "Projekt OZE",
+  "description":"Opcjonalny opis projektu...",
   "location": {
     "lat": 53.46,
     "lon": 14.78,
     "timezone": "Europe/Warsaw"
   },
   "grid_power_kw": 12.0,
-  "load": {
-     "yearly_kwh": 6000,
-     "profile": "home"
-   },
+  "tariff_profile": "",
   "pv_sources": [
     {
       "enabled": true,
@@ -33,10 +31,5 @@
       "power_kw": 10.0,
       "eta": 0.95
     }
-  ],
-  "tariff": {
-    "profile": "G11",
-    "buy_base": 0.80,
-    "sell_base": 0.30
-  }
+  ]
 }

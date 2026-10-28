@@ -48,7 +48,7 @@ package body GUI.Main_Window is
       Window.Set_Title
         ("OZE - " & GUI.Project_Directory);
 
-      Window.Set_Default_Size (1000, 750);
+      Window.Set_Default_Size (1200, 750);
 
       Window.Set_Resizable (True);
 

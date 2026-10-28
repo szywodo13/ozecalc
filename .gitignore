@@ -10,6 +10,9 @@ obj/
 # data/
 # data_test
 
+# Projects files
+projekty/
+
 # Editor backups
 *~
 *.swp
