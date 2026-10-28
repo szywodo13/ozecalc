@@ -157,23 +157,8 @@ package body GUI.Project is
 
       if GUI.Project_Loaded then
          Result.Version := GUI.Current_Project.Version;
-
-         -- Tych sekcji na razie nie edytujemy w GUI
-         Result.Load   := GUI.Current_Project.Load;
-         Result.Tariff := GUI.Current_Project.Tariff;
       else
          Result.Version := 1;
-
-         Result.Load :=
-           (Yearly_Energy => 0.0,
-            Profile_Name  =>
-              Ada.Strings.Unbounded.Null_Unbounded_String);
-
-         Result.Tariff :=
-           (Profile_Name =>
-              Ada.Strings.Unbounded.Null_Unbounded_String,
-            Buy_Base  => 0.0,
-            Sell_Base => 0.0);
       end if;
 
       Result.Name :=
@@ -200,7 +185,7 @@ package body GUI.Project is
         OZE.Energy'Value
           (Grid_Limit_Field.Get_Text);
 
-      Result.Tariff.Profile_Name :=
+      Result.Tariff_Profile :=
         Ada.Strings.Unbounded.To_Unbounded_String
           (Tariff_Profile_Field.Get_Text);
 
@@ -397,7 +382,7 @@ package body GUI.Project is
                Row          => 5,
                Caption      => "Profil taryfowy:",
                Default_Text => Ada.Strings.Unbounded.To_String
-                 (Data.Tariff.Profile_Name),
+                 (Data.Tariff_Profile),
                Field        => Tariff_Profile_Field);
 
          end;

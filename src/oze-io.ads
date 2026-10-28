@@ -12,11 +12,9 @@ package OZE.IO is
      (Project_Directory : String;
       Project           : OZE.Project.Project_Data);
 
-
    function Load_Load_Profile
      (Project_Directory : String)
       return Hourly_Profile;
-
 
    procedure Load_Tariff_Profiles
      (Project_Directory : String;
@@ -32,7 +30,6 @@ package OZE.IO is
       Buy_Price         : Real;
       Sell_Price        : Real);
 
-
    function Load_Production
      (Project_Directory : String)
       return Hourly_Profile;
@@ -40,7 +37,6 @@ package OZE.IO is
    procedure Save_Production
      (Project_Directory : String;
       Production        : Hourly_Profile);
-
 
    procedure Write_Timeseries
      (Project_Directory : String;

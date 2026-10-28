@@ -1,55 +1,64 @@
 {
-  "batteries": [
-    {
-      "cap_kwh": 5.00000000000000E+00,
-      "enabled": true,
-      "eta": 9.50000000000000E-01,
-      "name": "Magazyn  2",
-      "power_kw": 4.00000000000000E+00,
-      "soc0": 5.00000000000000E-01,
-      "soc_min": 1.00000000000000E-01
-    }
-  ],
-  "description": "Jest to przyk\u0142adowy plik, jak dzia\u0142a\u0107 w takim przypadku",
-  "grid_power_kw": 3.00000000000000E+01,
+  "version": 1,
+  "name": "Projekt OZE",
+  "description": "Jest to przykładowy plik, jak działać w takim przypadku",
   "location": {
-    "lat": 5.34600000000000E+01,
-    "lon": 1.47800000000000E+01,
+    "lat": 53.46,
+    "lon": 14.78,
     "timezone": "Europe/Warsaw"
   },
-  "name": "Projekt OZE",
+  "grid_power_kw": 30.00,
+  "tariff_profile": "G11",
   "pv_sources": [
     {
-      "azimuth_deg": 0.00000000000000E+00,
+      "name": "Zażółć",
       "enabled": true,
-      "kwp": 4.00000000000000E+00,
-      "mounting": "free",
-      "name": "Podworko po\u0142udniowe",
-      "system_loss_frac": 1.40000000000000E-01,
+      "kwp": 4.00,
       "technology": "crystSi",
-      "tilt_deg": 3.50000000000000E+01
+      "tilt_deg": 45.00,
+      "azimuth_deg": 0.00,
+      "system_loss_frac": 0.14,
+      "mounting": "free"
     },
     {
-      "azimuth_deg": 3.40000000000000E+01,
+      "name": "Jaźń",
       "enabled": true,
-      "kwp": 1.40000000000000E+01,
-      "mounting": "free",
-      "name": "Podworko przy kurniku",
-      "system_loss_frac": 1.40000000000000E-01,
-      "technology": "crystSi",
-      "tilt_deg": 3.50000000000000E+01
+      "kwp": 14.00,
+      "technology": "crystSi2025",
+      "tilt_deg": 35.00,
+      "azimuth_deg": 34.00,
+      "system_loss_frac": 0.14,
+      "mounting": "free"
     },
     {
-      "azimuth_deg": 0.00000000000000E+00,
+      "name": "Gęślą",
       "enabled": true,
-      "kwp": 5.00000000000000E+00,
-      "mounting": "building",
-      "name": "Dach na oborze",
-      "system_loss_frac": 1.40000000000000E-01,
+      "kwp": 5.00,
       "technology": "crystSi",
-      "tilt_deg": 3.50000000000000E+01
+      "tilt_deg": 90.00,
+      "azimuth_deg": -78.00,
+      "system_loss_frac": 0.14,
+      "mounting": "building"
     }
   ],
-  "tariff_profile": "G11",
-  "version": 1
+  "batteries": [
+    {
+      "name": "Magazyn  2",
+      "enabled": true,
+      "cap_kwh": 5.00,
+      "soc0": 0.50,
+      "soc_min": 0.1000,
+      "power_kw": 4.00,
+      "eta": 0.95
+    },
+    {
+      "name": "Magazyn  kolejny",
+      "enabled": true,
+      "cap_kwh": 7.00,
+      "soc0": 0.40,
+      "soc_min": 0.1000,
+      "power_kw": 2.00,
+      "eta": 0.95
+    }
+  ]
 }

@@ -33,6 +33,17 @@ package body OZE.IO is
            Ada.Strings.Both);
    end Real_Image;
 
+   function JSON_Boolean_Image
+     (Value : Boolean) return String
+   is
+   begin
+      if Value then
+         return "true";
+      else
+         return "false";
+      end if;
+   end JSON_Boolean_Image;
+
    function JSON_String
      (Value : String) return String
    is
@@ -239,19 +250,6 @@ package body OZE.IO is
    end Mounting_Image;
 
 
-   procedure Set_Real_Field
-     (Object     : JSON_Value;
-      Field_Name : String;
-      Value      : Real)
-   is
-   begin
-      Set_Field_Long_Float
-        (Object,
-         Field_Name,
-         Long_Float (Value));
-   end Set_Real_Field;
-
-
    function Load_Project
      (Project_Directory : String)
       return OZE.Project.Project_Data
@@ -264,12 +262,6 @@ package body OZE.IO is
 
       Location_JSON : constant JSON_Value :=
         Get (Root, "location");
-
-      Load_JSON : constant JSON_Value :=
-        Get (Root, "load");
-
-      Tariff_JSON : constant JSON_Value :=
-        Get (Root, "tariff");
 
       PV_JSON : constant JSON_Array :=
         Get (Root, "pv_sources");
@@ -398,36 +390,17 @@ package body OZE.IO is
            Energy
              (Number (Root, "grid_power_kw")),
 
-         Load =>
-           (Yearly_Energy =>
-                Energy
-              (Number
-                   (Load_JSON, "yearly_kwh")),
-
-            Profile_Name =>
-              To_Unbounded_String
-                (String_Value
-                     (Load_JSON, "profile"))),
+         Tariff_Profile =>
+           To_Unbounded_String
+             (String_Value
+                  (Root, "tariff_profile")),
 
          PV_Sources =>
            PV_Sources,
 
          Batteries =>
-           Batteries,
-
-         Tariff =>
-           (Profile_Name =>
-                To_Unbounded_String
-              (String_Value
-                   (Tariff_JSON, "profile")),
-
-            Buy_Base =>
-              Number
-                (Tariff_JSON, "buy_base"),
-
-            Sell_Base =>
-              Number
-                (Tariff_JSON, "sell_base")));
+           Batteries
+        );
    end Load_Project;
 
 
@@ -435,204 +408,18 @@ package body OZE.IO is
      (Project_Directory : String;
       Project           : OZE.Project.Project_Data)
    is
-      Root          : constant JSON_Value := Create_Object;
-      Location_JSON : constant JSON_Value := Create_Object;
-      Load_JSON     : constant JSON_Value := Create_Object;
-      Tariff_JSON   : constant JSON_Value := Create_Object;
-
-      PV_JSON        : JSON_Array := Empty_Array;
-      Batteries_JSON : JSON_Array := Empty_Array;
-
       File : Ada.Text_IO.File_Type;
 
+      PV_Number      : Natural := 0;
+      Battery_Number : Natural := 0;
+
+      PV_Count : constant Natural :=
+        Natural (Project.PV_Sources.Length);
+
+      Battery_Count : constant Natural :=
+        Natural (Project.Batteries.Length);
+
    begin
-      Set_Field
-        (Root,
-         "version",
-         Integer (Project.Version));
-
-      Set_Field
-        (Root,
-         "name",
-         Project.Name);
-
-      Set_Field
-        (Root,
-         "description",
-         Project.Description);
-
-      Set_Real_Field
-        (Location_JSON,
-         "lat",
-         Project.Location.Site.Latitude);
-
-      Set_Real_Field
-        (Location_JSON,
-         "lon",
-         Project.Location.Site.Longitude);
-
-      Set_Field
-        (Location_JSON,
-         "timezone",
-         Project.Location.Timezone);
-
-      Set_Field
-        (Root,
-         "location",
-         Location_JSON);
-
-
-      Set_Real_Field
-        (Root,
-         "grid_power_kw",
-         Real (Project.Grid_Limit));
-
-
-      Set_Real_Field
-        (Load_JSON,
-         "yearly_kwh",
-         Real (Project.Load.Yearly_Energy));
-
-      Set_Field
-        (Load_JSON,
-         "profile",
-         Project.Load.Profile_Name);
-
-      Set_Field
-        (Root,
-         "load",
-         Load_JSON);
-
-
-      for Source of Project.PV_Sources loop
-         declare
-            Item : constant JSON_Value := Create_Object;
-         begin
-            Set_Field
-              (Item,
-               "enabled",
-               Source.Enabled);
-
-            Set_Field
-              (Item,
-               "name",
-               Source.Name);
-
-            Set_Real_Field
-              (Item,
-               "kwp",
-               Real (Source.Config.Peak_Power));
-
-            Set_Field
-              (Item,
-               "technology",
-               Technology_Image
-                 (Source.Config.Technology));
-
-            Set_Real_Field
-              (Item,
-               "tilt_deg",
-               Source.Config.Tilt);
-
-            Set_Real_Field
-              (Item,
-               "azimuth_deg",
-               Source.Config.Azimuth);
-
-            Set_Real_Field
-              (Item,
-               "system_loss_frac",
-               Source.Config.System_Loss);
-
-            Set_Field
-              (Item,
-               "mounting",
-               Mounting_Image
-                 (Source.Config.Mounting));
-
-            Append
-              (PV_JSON,
-               Item);
-         end;
-      end loop;
-
-      Set_Field
-        (Root,
-         "pv_sources",
-         PV_JSON);
-
-
-      for Battery of Project.Batteries loop
-         declare
-            Item : constant JSON_Value := Create_Object;
-         begin
-            Set_Field
-              (Item,
-               "enabled",
-               Battery.Enabled);
-
-            Set_Field
-              (Item,
-               "name",
-               Battery.Name);
-
-            Set_Real_Field
-              (Item,
-               "cap_kwh",
-               Real (Battery.Config.Capacity));
-
-            Set_Real_Field
-              (Item,
-               "soc0",
-               Real (Battery.Config.Initial_SOC));
-
-            Set_Real_Field
-              (Item,
-               "soc_min",
-               Real (Battery.Config.Minimum_SOC));
-
-            Set_Real_Field
-              (Item,
-               "power_kw",
-               Real (Battery.Config.P_Max));
-
-            Set_Real_Field
-              (Item,
-               "eta",
-               Real (Battery.Config.Efficiency));
-
-            Append
-              (Batteries_JSON,
-               Item);
-         end;
-      end loop;
-
-      Set_Field
-        (Root,
-         "batteries",
-         Batteries_JSON);
-
-
-      Set_Field
-        (Tariff_JSON,
-         "profile",
-         Project.Tariff.Profile_Name);
-
-      Set_Real_Field
-        (Tariff_JSON,
-         "buy_base",
-         Project.Tariff.Buy_Base);
-
-      Set_Real_Field
-        (Tariff_JSON,
-         "sell_base",
-         Project.Tariff.Sell_Base);
-
-      Set_Field
-        (Root,
-         "tariff",
-         Tariff_JSON);
-
 
       Ada.Text_IO.Create
         (File,
@@ -641,16 +428,244 @@ package body OZE.IO is
            (Project_Directory,
             "project.json"));
 
+      Ada.Text_IO.Put_Line (File, "{");
+
       Ada.Text_IO.Put_Line
         (File,
-         Write
-           (Root,
-            Compact => False));
+         "  ""version"": "
+         & Ada.Strings.Fixed.Trim
+           (Positive'Image (Project.Version),
+            Ada.Strings.Both)
+         & ",");
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ""name"": "
+         & JSON_String (Project.Name)
+         & ",");
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ""description"": "
+         & JSON_String (Project.Description)
+         & ",");
+
+      ---------------------------------------------------------
+      -- Location
+      ---------------------------------------------------------
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ""location"": {");
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "    ""lat"": "
+         & Real_Image
+           (Project.Location.Site.Latitude, 2)
+         & ",");
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "    ""lon"": "
+         & Real_Image
+           (Project.Location.Site.Longitude, 2)
+         & ",");
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "    ""timezone"": "
+         & JSON_String (Project.Location.Timezone));
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  },");
+
+      ---------------------------------------------------------
+      -- General project data
+      ---------------------------------------------------------
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ""grid_power_kw"": "
+         & Real_Image
+           (Real (Project.Grid_Limit), 2)
+         & ",");
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ""tariff_profile"": "
+         & JSON_String (Project.Tariff_Profile)
+         & ",");
+
+      ---------------------------------------------------------
+      -- PV
+      ---------------------------------------------------------
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ""pv_sources"": [");
+
+      for Source of Project.PV_Sources loop
+
+         PV_Number := PV_Number + 1;
+
+         Ada.Text_IO.Put_Line (File, "    {");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""name"": "
+            & JSON_String (Source.Name)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""enabled"": "
+            & JSON_Boolean_Image (Source.Enabled)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""kwp"": "
+            & Real_Image
+              (Real (Source.Config.Peak_Power), 2)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""technology"": "
+            & JSON_String
+              (Technology_Image
+                   (Source.Config.Technology))
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""tilt_deg"": "
+            & Real_Image
+              (Source.Config.Tilt, 2)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""azimuth_deg"": "
+            & Real_Image
+              (Source.Config.Azimuth, 2)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""system_loss_frac"": "
+            & Real_Image
+              (Source.Config.System_Loss, 2)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""mounting"": "
+            & JSON_String
+              (Mounting_Image
+                   (Source.Config.Mounting)));
+
+         if PV_Number < PV_Count then
+            Ada.Text_IO.Put_Line (File, "    },");
+         else
+            Ada.Text_IO.Put_Line (File, "    }");
+         end if;
+
+      end loop;
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ],");
+
+      ---------------------------------------------------------
+      -- Batteries
+      ---------------------------------------------------------
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ""batteries"": [");
+
+      for Battery of Project.Batteries loop
+
+         Battery_Number := Battery_Number + 1;
+
+         Ada.Text_IO.Put_Line (File, "    {");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""name"": "
+            & JSON_String (Battery.Name)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""enabled"": "
+            & JSON_Boolean_Image (Battery.Enabled)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""cap_kwh"": "
+            & Real_Image
+              (Real (Battery.Config.Capacity), 2)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""soc0"": "
+            & Real_Image
+              (Real (Battery.Config.Initial_SOC), 2)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""soc_min"": "
+            & Real_Image
+              (Real (Battery.Config.Minimum_SOC), 4)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""power_kw"": "
+            & Real_Image
+              (Real (Battery.Config.P_Max), 2)
+            & ",");
+
+         Ada.Text_IO.Put_Line
+           (File,
+            "      ""eta"": "
+            & Real_Image
+              (Real (Battery.Config.Efficiency), 2));
+
+         if Battery_Number < Battery_Count then
+            Ada.Text_IO.Put_Line (File, "    },");
+         else
+            Ada.Text_IO.Put_Line (File, "    }");
+         end if;
+
+      end loop;
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "  ]");
+
+      Ada.Text_IO.Put_Line
+        (File,
+         "}");
 
       Ada.Text_IO.Close (File);
 
-   end Save_Project;
+   exception
+      when others =>
+         if Ada.Text_IO.Is_Open (File) then
+            Ada.Text_IO.Close (File);
+         end if;
 
+         raise;
+
+   end Save_Project;
 
    function Load_Load_Profile
      (Project_Directory : String)
